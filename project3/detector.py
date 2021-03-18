@@ -19,8 +19,8 @@ for packet in PcapReader(infile):
         src = packet.sprintf('{IP:%IP.src%}{IPv6:%IPv6.src%}')
         countACK[src] += 1
 
-print(countSyn)
-print(countACK)
+# print(countSyn)
+# print(countACK)
 
 # with open('SYN.txt', 'w') as file:
 #      file.write(json.dumps(countSYN))
