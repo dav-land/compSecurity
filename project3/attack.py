@@ -3,8 +3,6 @@ import socket
 import scapy
 from scapy.all import *
 
-
-
 def inject_pkt(pkt):
     #import dnet
     #dnet.ip().send(pkt)
@@ -15,16 +13,13 @@ def inject_pkt(pkt):
 # edit this function to do your attack
 ######
 def handle_pkt(pkt):
-    print(pkt.encode('hex'))
-    pass
+    if("GET / HTTP/1.1" in str(pkt)):
+        badPack = IP(src=pkt[IP].src, dst=pkt[IP].dst)
+        print(badPack)
+
 
 def main():
-
-    # s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 0x0300)
-    # while True:
-    #     pkt = s.recv(0xffff)
-    #     handle_pkt(pkt)
-    sniff(filter="ip", prn=handle_pkt)
+    sniff(prn=handle_pkt, filter="ip")
         
 
 if __name__ == '__main__':
