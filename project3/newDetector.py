@@ -1,4 +1,4 @@
-import dpkt, socket, sys
+import dpkt, socket
 from collections import Counter
 
 file = open('proj3.pcap', 'rb')
@@ -7,24 +7,29 @@ pcap = dpkt.pcap.Reader(file)
 countSYN = Counter()
 countACK = Counter()
 
+# used code from "https://jon.oberheide.org/blog/2008/10/15/dpkt-tutorial-2-parsing-a-pcap-file/" for iteration
 for ts, buf in pcap:
+    #ignore malformed packets
+    try:
+        eth = dpkt.ethernet.Ethernet(buf)
+    except dpkt.dpkt.NeedData:
+        pass
 
-    if dpkt.dpkt.NeedData:
-        continue
-    eth = dpkt.ethernet.Ethernet(buf)
-
-    if isinstance(eth.data, dpkt.ip.IP):
+    #only use IP packets
+    if type(eth.data) == dpkt.ip.IP:
         ip = eth.data
 
-        if isinstance(ip.data, dpkt.tcp.TCP):
+        #only use TCP packets
+        if type(ip.data) == dpkt.tcp.TCP:
             tcp = ip.data
 
+            # Count SYN flags per IP
             if (tcp.flags & dpkt.tcp.TH_SYN) and not(tcp.flags & dpkt.tcp.TH_ACK):
-                if ip.src in countSYN:
-                    countSYN[ip.src] += 1
+                countSYN[ip.src] += 1
+
+            # Count SYN+ACK flags per IP
             if (tcp.flags & dpkt.tcp.TH_SYN) and (tcp.flags & dpkt.tcp.TH_ACK):
-                if ip.dst in countACK:
-                    countACK[ip.dst] += 1
+                countACK[ip.dst] += 1
 
 for IP in countSYN:
     if IP in countACK:
