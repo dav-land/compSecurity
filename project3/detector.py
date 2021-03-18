@@ -36,6 +36,6 @@ print(countACK)
 for IP in countSYN:
     if IP in countACK:
         if (countSYN[IP] > 3 * (countACK[IP])):
-            print(toStr(IP))
+            print(IP)
     elif countSYN[IP] >= 3:
-        print(toStr(IP))
+        print(IP)
