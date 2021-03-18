@@ -1,54 +1,31 @@
-import dpkt, socket
+from scapy.all import *
 from collections import Counter
-import sys
 
 countSYN = Counter()
 countACK = Counter()
 
 def main():
-    filename = 	sys.argv[1]
-    file = open(filename, 'rb')
-    pcap = dpkt.pcap.Reader(file)
+    infile = sys.argv[1]
+    # Code for parsing and flag extraction used from following link:
+    # https://stackoverflow.com/questions/38154662/how-can-i-extract-tcp-syn-flag-from-pcap-file-and-detect-syn-flood-attack-using
+    for packet in PcapReader(infile):
+        # check for SYN flag in packet
+        if TCP in packet and packet[TCP].flags == 'S':
+            src = packet.sprintf('{IP:%IP.src%}{IPv6:%IPv6.src%}')
+            countSYN[src] += 1
 
-    # used code from "https://jon.oberheide.org/blog/2008/10/15/dpkt-tutorial-2-parsing-a-pcap-file/" for iteration
-    # used "https://dpkt.readthedocs.io/en/latest/_modules/examples/print_http_requests.html" for flag extraction
-    for ts, buf in pcap:
-        #ignore malformed packets
-        try:
-            eth = dpkt.ethernet.Ethernet(buf)
-        except dpkt.dpkt.NeedData:
-            pass
+        # check for SYN+ACK flag in packet
+        if TCP in packet and packet[TCP].flags == 'SA':
+            src = packet.sprintf('{IP:%IP.dst%}{IPv6:%IPv6.dst%}')
+            countACK[src] += 1
 
-        #only use IP packets
-        if type(eth.data) == dpkt.ip.IP:
-            ip = eth.data
-
-            #only use TCP packets
-            if type(ip.data) == dpkt.tcp.TCP:
-                tcp = ip.data
-
-                # Count SYN flags per IP
-                # use source
-                if (tcp.flags & dpkt.tcp.TH_SYN) and not(tcp.flags & dpkt.tcp.TH_ACK):
-                    countSYN[ip.src] += 1
-                # Count SYN+ACK flags per IP
-                # use destination
-                if (tcp.flags & dpkt.tcp.TH_SYN) and (tcp.flags & dpkt.tcp.TH_ACK):
-                    countACK[ip.dst] += 1
-
-    # used example code from "https://dpkt.readthedocs.io/en/latest/_modules/examples/print_packets.html#mac_addr"
+    # return IP of packet with at least 3x as many SYN as SYN+ACK
     for IP in countSYN:
-        if IP in countACK:
-            if (countSYN[IP] > 3 * (countACK[IP])):
-                try:
-                    print(socket.inet_ntop(socket.AF_INET, IP))
-                except ValueError:
-                    print(socket.inet_ntop(socket.AF_INET6, IP))
+        if countACK[IP]:
+            if countSYN[IP] > (3 * countACK[IP]):
+                print(IP)
         else:
-            try:
-                print(socket.inet_ntop(socket.AF_INET, IP))
-            except ValueError:
-                print(socket.inet_ntop(socket.AF_INET6, IP))
+            print(IP)
 
 if __name__ == '__main__':
     main()
