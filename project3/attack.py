@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-
+import socket
 import scapy
-from scapy.all import send, conf, L3RawSocket
+from scapy.all import *
 
 
 
@@ -15,18 +15,16 @@ def inject_pkt(pkt):
 # edit this function to do your attack
 ######
 def handle_pkt(pkt):
-    string = str(pkt)
-    if("freeaeskey" in string):
-        print(string)
+    print(pkt.encode('hex'))
     pass
 
 def main():
-    import socket
-    s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 0x0300)
-    while True:
-        pkt = s.recv(0xffff)
-        handle_pkt(pkt)
 
+    # s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, 0x0300)
+    # while True:
+    #     pkt = s.recv(0xffff)
+    #     handle_pkt(pkt)
+    sniff(filter="ip", prn=handle_pkt)
         
 
 if __name__ == '__main__':
