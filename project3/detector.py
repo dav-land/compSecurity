@@ -1,6 +1,5 @@
 from scapy.all import *
 from collections import Counter
-import json
 
 synAckRatio = 3
 infile = 'proj3.pcap'
