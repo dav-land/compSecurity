@@ -32,3 +32,4 @@ for IP in countSYN:
             print(socket.inet_ntoa(IP))
         else:
             print(socket.inet_ntoa(IP))
+    print(type(IP))
